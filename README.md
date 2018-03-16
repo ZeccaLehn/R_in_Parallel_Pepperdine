@@ -1,5 +1,5 @@
 # R in Parallel: A Guest Lecture Series
-### 03/16/2018 at Pepperdine Univ in LA
+### 03/16/2018 at Pepperdine Univ in LA, as part of Prof. Doug Leigh's inaugural ML course
 
 Overview: 
 
