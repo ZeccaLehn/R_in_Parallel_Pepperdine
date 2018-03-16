@@ -1,4 +1,5 @@
-# R in Parallel: A Guest Lecture Series (3/16//2018 @ Pepperdine Univ in LA)
+# R in Parallel: A Guest Lecture Series
+### (3/16//2018 @ Pepperdine Univ in LA)
 
 Overview: 
 
