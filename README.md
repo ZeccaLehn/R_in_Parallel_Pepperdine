@@ -1,2 +1,5 @@
-# R_in_Parallel_Pepperdine
-A stress test walk through of parallel processing in R, as well as an intro to installing R/Python on Google Compute Engine (GCE).
+# R  in Parallel: A Guest Lecture Series on Distributed ML in R and setting up Virtual Environments in GCloud
+
+- A stress test walk through and presentation on parallel processing in R
+
+- An intro w/bash script for installing current R/Python languages in virtual environments using Anaconda and Google Compute Engine (GCE)
