@@ -1,4 +1,6 @@
-# R  in Parallel: A Guest Lecture Series on Distributed ML in R and setting up Virtual Environments in GCloud
+# R in Parallel: A Guest Lecture Series (3/16//2018 @ Pepperdine Univ in LA)
+
+Overview: 
 
 - A stress test walk through and presentation on parallel processing in R
 
