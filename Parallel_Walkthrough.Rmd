@@ -1,0 +1,202 @@
+---
+title: "'R in Parallel' Walkthrough"
+author: "Zecca Lehn (Twitter: @Zecca_Lehn)"
+date: "3/15/2018"
+note: "For Pepperdine ML Class Presentation"
+output: html_notebook
+---
+
+### Install Packages
+```{r}
+
+library(parallel)
+library(doParallel) # Requires install first
+library(foreach)
+
+```
+
+
+### Find and Register Cores
+```{r, cache=TRUE}
+
+cores <- parallel::detectCores() # Detects cores on CPU; check output below against your cores
+print(foreach::getDoParWorkers())
+cl <- parallel::makeCluster(cores) # Creates a set of copies of R running in parallel and w/sockets
+doParallel::registerDoParallel(cl) # Registers copies
+
+```
+
+### Non-parallel timed examples without data
+```{r}
+
+# General for loop
+ptm <- proc.time()
+for(i in 1:10){ Sys.sleep(.5) }
+proc.time() - ptm
+
+```
+
+```{r}
+
+# Lapply non-parallel: Uses C code magic
+ptm <- proc.time()
+outputData <- lapply(1:10, function(i) { i; Sys.sleep(.5)})
+proc.time() - ptm
+
+```
+
+```{r}
+
+# Fancy for loop with foreach package
+ptm <- proc.time()
+outputData <- foreach::foreach(i = 1:10) %do% { # Note 'do' vs. 'dopar' below
+  Sys.sleep(.5)}
+proc.time() - ptm
+  
+```
+
+
+### Let's get parallel with data 100K random normal samples
+
+```{r}
+
+# foreach non-parallel
+ptm <- proc.time()
+outputData <- foreach::foreach(i = 1:1000) %do% { rnorm(1000000) } # Parallel ".combine=rbind"
+
+print(head(outputData[[1]]))
+proc.time() - ptm
+
+```
+
+```{r}
+
+# foreach parallel
+ptm <- proc.time()
+outputData <- foreach::foreach(i = 1:1000) %dopar% { rnorm(1000000) } # Note: Asynchronous ".inorder=TRUE"
+print(head(outputData[[1]]))
+proc.time() - ptm
+
+```
+
+```{r}
+
+# lapply non-parallel
+ptm <- proc.time()
+outputData <- lapply(1:1000, function(i) {  rnorm(1000000) }) 
+print(head(outputData[[1]]))
+proc.time() - ptm
+
+```
+
+```{r}
+
+# parallel with mclapply (Mac/Linux)
+
+ptm <- proc.time()
+outputData <- parallel::mclapply(1:1000, function(i) {  rnorm(1000000) }, mc.cores = cores)
+print(head(outputData[[1]]))
+proc.time() - ptm
+
+```
+
+```{r}
+
+### Destroy Cores Cluster
+stopCluster(cl) # Destroy cluster
+
+```
+
+### Machine Learning Example using Caret Package
+```{r, warning=F}
+
+library(AppliedPredictiveModeling) # Abalone Data (Male / Female / Infant)
+library(caret) # e1071 / lubridate (non binary install) / randomForest
+
+data(abalone)
+dim(abalone)
+
+```
+
+
+```{r}
+
+head(abalone) 
+
+```
+
+```{r}
+
+table(abalone$Type) # Note: Balanced classes!
+
+```
+
+```{r}
+
+inSampleTrainFeatures <- abalone[,2:9]
+inSampleTrainTarget <- abalone[,1]
+
+```
+
+```{r}
+
+names(getModelInfo())
+
+```
+
+
+```{r}
+
+# Non-Parallelized Random Forest
+ptm <- Sys.time()
+modelFit <- caret::train(inSampleTrainFeatures, inSampleTrainTarget,
+                  method = "rf",
+                  # preProcess = c("center", "scale"),
+                  # tuneGrid = data.frame(mtry = expand.grid(...))
+                  # trControl = trainControl(method="repeatedcv", number = 3, repeats = 1),
+                  allowParallel = FALSE,
+                  importance = TRUE,
+                  verbose = TRUE)
+Sys.time() - ptm
+
+```
+
+
+```{r}
+
+# Now the parallel Random Forest version
+library(doParallel)
+cores <- parallel::detectCores()
+cl <- makeCluster(cores)
+registerDoParallel(cl) 
+
+ptm <- Sys.time()
+modelFit <- train(inSampleTrainFeatures, inSampleTrainTarget,
+                  method = "rf",
+                  # preProcess = c("center", "scale"),
+                  # tuneGrid = data.frame(mtry = expand.grid(...))
+                  # trControl = trainControl(method="repeatedcv", number = 5, repeats = 2),
+                  importance = TRUE,
+                  allowParallel=TRUE,
+                  verbose = TRUE)
+
+stopCluster(cl)
+Sys.time() - ptm
+
+```
+
+
+```{r}
+
+confusionMatrix(modelFit)
+
+```
+
+```{r}
+
+# Variable Importance
+plot(varImp(modelFit, scale = TRUE))
+
+```
+
+
